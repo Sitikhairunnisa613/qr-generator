@@ -7,12 +7,29 @@
 
       <!-- MODE -->
       <div class="tabs">
-        <button @click="mode='text'" :class="{active: mode==='text'}">Text</button>
-        <button @click="mode='payment'" :class="{active: mode==='payment'}">Payment</button>
+
+        <button
+          @click="mode='text'"
+          :class="{ active: mode === 'text' }"
+        >
+          Text
+        </button>
+
+        <button
+          @click="mode='payment'"
+          :class="{ active: mode === 'payment' }"
+        >
+          Payment
+        </button>
+
       </div>
 
       <!-- TYPE -->
-      <select v-if="mode==='text'" v-model="type" class="input">
+      <select
+        v-if="mode === 'text'"
+        v-model="type"
+        class="input"
+      >
         <option value="text">Text</option>
         <option value="url">URL</option>
         <option value="wa">WhatsApp</option>
@@ -21,7 +38,7 @@
 
       <!-- INPUT TEXT -->
       <input
-        v-if="mode==='text'"
+        v-if="mode === 'text'"
         v-model="text"
         :placeholder="placeholderText"
         class="input"
@@ -29,20 +46,42 @@
 
       <!-- INPUT PAYMENT -->
       <input
-        v-if="mode==='payment'"
+        v-if="mode === 'payment'"
         v-model="amount"
         type="number"
         placeholder="Masukkan nominal"
         class="input"
       />
 
-      <button class="btn" @click="generateQR">
+      <!-- BUTTON -->
+      <button
+        class="btn"
+        @click="generateQR"
+      >
         Generate QR
       </button>
 
+      <!-- RESULT -->
       <div v-if="qr" class="result">
-        <img :src="qr" />
-        <p class="preview">{{ preview }}</p>
+
+        <img
+          :src="qr"
+          class="qr-image"
+          alt="QR Code"
+        />
+
+        <p class="preview">
+          {{ preview }}
+        </p>
+
+        <!-- DOWNLOAD -->
+        <button
+          class="download-btn"
+          @click="downloadQR"
+        >
+          Download QR
+        </button>
+
       </div>
 
     </div>
@@ -52,6 +91,7 @@
 
 <script>
 export default {
+
   data() {
     return {
       mode: 'text',
@@ -65,25 +105,39 @@ export default {
   },
 
   computed: {
+
     placeholderText() {
-      if (this.type === 'wa') return 'Contoh: 08123456789'
-      if (this.type === 'ig') return 'Contoh: username_ig'
-      if (this.type === 'url') return 'Contoh: google.com'
+
+      if (this.type === 'wa') {
+        return 'Contoh: 08123456789'
+      }
+
+      if (this.type === 'ig') {
+        return 'Contoh: username_ig'
+      }
+
+      if (this.type === 'url') {
+        return 'Contoh: google.com'
+      }
+
       return 'Masukkan text'
     }
   },
 
   methods: {
+
     generateQR() {
 
       const BASE_URL = 'http://192.168.100.104:8000'
 
       this.invoiceId = 'QR' + Date.now()
 
-      // ================= TEXT =================
       if (this.mode === 'text') {
 
-        if (!this.text) return
+        if (!this.text) {
+          alert('Masukkan data terlebih dahulu')
+          return
+        }
 
         let value = ''
 
@@ -109,26 +163,42 @@ export default {
 
         this.preview = value
 
-        // ✔ QR dari Laravel (NO API)
         this.qr = `${BASE_URL}/qr?data=${encodeURIComponent(value)}`
-
         return
       }
 
-      // ================= PAYMENT =================
       if (this.mode === 'payment') {
 
-        if (!this.amount) return
+        if (!this.amount) {
+          alert('Masukkan nominal')
+          return
+        }
 
         const url =
           `${BASE_URL}/scan/payment/${this.invoiceId}?nominal=${this.amount}`
 
         this.preview = url
 
-        // ✔ QR dari Laravel (NO API)
-        this.qr = `${BASE_URL}/qr?data=${encodeURIComponent(url)}`
+        this.qr =
+          `${BASE_URL}/qr?data=${encodeURIComponent(url)}`
       }
-    }
+    },
+
+    // DOWNLOAD QR 
+    downloadQR() {
+
+  if (!this.qr) {
+    alert("QR belum dibuat")
+    return
+  }
+
+  const link = document.createElement('a')
+  link.href = this.qr
+  link.download = 'qrcode.png' 
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
   }
 }
 </script>
@@ -148,7 +218,7 @@ export default {
   padding: 30px;
   border-radius: 20px;
   width: 380px;
-  box-shadow: 0 10px 30px rgba(255,105,180,0.15);
+  box-shadow: 0 10px 30px rgba(255, 105, 180, 0.15);
   text-align: center;
 }
 
@@ -182,6 +252,8 @@ h2 {
   margin-top: 10px;
   border-radius: 10px;
   border: 1px solid #ffd1e6;
+  outline: none;
+  box-sizing: border-box;
 }
 
 .btn {
@@ -199,8 +271,25 @@ h2 {
   margin-top: 20px;
 }
 
+.qr-image {
+  width: 250px;
+}
+
 .preview {
   font-size: 12px;
   color: #666;
+  margin-top: 10px;
+  word-break: break-word;
+}
+
+.download-btn {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 10px 18px;
+  background: #ff69b4;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
 }
 </style>

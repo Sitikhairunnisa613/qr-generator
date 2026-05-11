@@ -5,24 +5,26 @@ use Illuminate\Http\Request;
 use App\Models\Invoice;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-//*HOME */
+//HOME
 Route::get('/', function () {
     return view('welcome');
 });
 
-/*QR GENERATOR*/
+//QR GENERATOR
 Route::get('/qr', function (Request $request) {
 
-    if (!$request->data) {
-        return "Data kosong";
+    $data = $request->query('data');
+
+    if (!$data) {
+        return 'Data kosong';
     }
 
     return response(
-        QrCode::size(300)->generate($request->data)
+        QrCode::size(300)->generate($data)
     )->header('Content-Type', 'image/svg+xml');
 });
 
-/*SCAN PAYMENT (CREATE / OPEN PAYMENT)*/
+//SCAN PAYMENT
 Route::get('/scan/payment/{id}', function ($id, Request $request) {
 
     $nominal = $request->query('nominal');
@@ -30,6 +32,7 @@ Route::get('/scan/payment/{id}', function ($id, Request $request) {
     $payment = Invoice::where('invoice_id', $id)->first();
 
     if (!$payment) {
+
         $payment = Invoice::create([
             'invoice_id' => $id,
             'nominal' => $nominal ?? 0,
@@ -40,13 +43,15 @@ Route::get('/scan/payment/{id}', function ($id, Request $request) {
     return view('payment', compact('payment'));
 });
 
-/*MARK AS PAID*/
+//MARK AS PAID
+
+
 Route::get('/payment/paid/{id}', function ($id) {
 
     $payment = Invoice::where('invoice_id', $id)->first();
 
     if (!$payment) {
-        return view('notfound', compact('id'));
+        return 'Payment tidak ditemukan';
     }
 
     $payment->update([
